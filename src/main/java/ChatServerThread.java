@@ -1,5 +1,6 @@
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import util.MessagesCodes;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -107,6 +108,7 @@ public class ChatServerThread extends Thread implements Observer {
         chatServer.addUser(this.userName, this);
     }
 
+    // Chequear concurrencia aca
     private synchronized void sendPrivateMessage(String receiverName, String message) {
         ChatMessages chatMessage = this.privateMessages.get(receiverName);
         if ( chatMessage == null ) {
@@ -125,6 +127,7 @@ public class ChatServerThread extends Thread implements Observer {
         chatMessage.setMessage(message);
     }
 
+    // Chequear concurrencia aca
     public synchronized void suscribeTo(ChatMessages chatMessages, String username) {
         this.privateMessages.put(username, chatMessages);
         chatMessages.addObserver(this);

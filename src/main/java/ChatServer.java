@@ -26,6 +26,7 @@ public class ChatServer {
             ChatMessages globalMessages = new ChatMessages(null, null);
             // Escucha por peticiones provenientes del cliente
             while(true) {
+                log.info("Server escuchando en el puerto: " + this.port);
                 clientSocket = serverSocket.accept();
                 ChatServerThread chatServerThread = new ChatServerThread(this, clientSocket, globalMessages);
                 chatServerThread.start();
