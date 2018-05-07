@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatServer {
@@ -23,13 +24,14 @@ public class ChatServer {
         try {
             this.serverSocket = new ServerSocket(this.port);
             Socket clientSocket;
-            ChatMessages globalMessages = new ChatMessages(null, null);
+            final ChatMessages globalMessages = new ChatMessages(null, null);
             // Escucha por peticiones provenientes del cliente
             while(true) {
                 log.info("Server escuchando en el puerto: " + this.port);
                 clientSocket = serverSocket.accept();
                 ChatServerThread chatServerThread = new ChatServerThread(this, clientSocket, globalMessages);
                 chatServerThread.start();
+                log.info("Conexion aceptada, thread id: " + chatServerThread.getId());
             }
         } catch (IOException e) {
             log.error("Error creando el server: " + e.getMessage());
@@ -46,5 +48,11 @@ public class ChatServer {
 
     public void addUser(String userName, ChatServerThread thread) {
         runningThreads.put(userName, thread);
+    }
+
+    public void broadcastUser(String userName) {
+        for (Map.Entry<String, ChatServerThread>  entry: runningThreads.entrySet()) {
+            entry.getValue().updateUser(userName);
+        }
     }
 }

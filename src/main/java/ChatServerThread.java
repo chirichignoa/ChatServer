@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChatServerThread extends Thread implements Observer {
@@ -47,6 +48,7 @@ public class ChatServerThread extends Thread implements Observer {
                 receivedMessage = this.dataIn.readUTF();
                 this.decodeRequest(receivedMessage);
             } catch (IOException readException) {
+                // desconectar usuarios
                 log.error("Error al leer mensaje, puede que se haya cerrado la conexion: " + readException.getMessage());
                 connected = false;
                 // Si se ha producido un error al recibir datos del cliente se cierra la conexion con el.
@@ -63,7 +65,7 @@ public class ChatServerThread extends Thread implements Observer {
     }
 
     @Override
-    public void update(Observable o, Object arg) {
+    public synchronized void update(Observable o, Object arg) {
         // Recibo una notificacion de que el mensaje ha cambiado por lo que debo actualizarle al cliente
         try {
             // Envia el mensaje al cliente y este lo discrimina para mostrarlo en la seccion correcta
@@ -87,15 +89,20 @@ public class ChatServerThread extends Thread implements Observer {
     }
 
     private void decodeRequest(String request) {
-        String[] args = request.split(MessagesCodes.SEPARATOR);
+        String[] args = request.split("\\" + MessagesCodes.SEPARATOR);
+        log.debug("New request -- " + request);
         switch (args[0]) {
             case MessagesCodes.NEW_USER:
+                log.debug("Nuevo usuario: " + args[1]);
                 this.registerUser(args[1]); //args[1] contains username
                 break;
             case MessagesCodes.GLOBAL_MESSAGE:
+                log.debug("Nuevo mensaje global");
+                this.globalMessages.setSenderName(this.userName);
                 this.globalMessages.setMessage(args[1]); //args[1] contains global message
                 break;
             case MessagesCodes.PRIVATE_MESSAGE:
+                log.debug("Nuevo mensaje privado");
                 this.sendPrivateMessage(args[1], args[2]); //args[1] contains receiver username args[2] contains message
                 break;
             default:
@@ -105,7 +112,11 @@ public class ChatServerThread extends Thread implements Observer {
 
     private void registerUser(String username) {
         this.userName = username;
+        if (ChatServer.getRunningThreads().size() > 0) {
+            this.updateUserList(ChatServer.getRunningThreads().keySet());
+        }
         chatServer.addUser(this.userName, this);
+        chatServer.broadcastUser(username);
     }
 
     // Chequear concurrencia aca
@@ -131,5 +142,29 @@ public class ChatServerThread extends Thread implements Observer {
     public synchronized void suscribeTo(ChatMessages chatMessages, String username) {
         this.privateMessages.put(username, chatMessages);
         chatMessages.addObserver(this);
+    }
+
+    public void updateUser(String userName) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(MessagesCodes.NEW_USER).append(MessagesCodes.SEPARATOR).append(userName);
+        try {
+            this.dataOut.writeUTF(builder.toString());
+        } catch (IOException e) {
+            log.error("Error al actualizar los usuarios:" + e.getMessage() );
+        }
+    }
+
+    public void updateUserList(Set<String> users) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(MessagesCodes.GET_USERS);
+        for (String user :
+                users) {
+            builder.append(MessagesCodes.SEPARATOR).append(user);
+        }
+        try {
+            this.dataOut.writeUTF(builder.toString());
+        } catch (IOException e) {
+            log.error("Error al actualizar la lista de usuarios:" + e.getMessage() );
+        }
     }
 }

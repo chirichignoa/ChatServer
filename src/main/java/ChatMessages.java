@@ -1,3 +1,4 @@
+import java.util.Objects;
 import java.util.Observable;
 
 public class ChatMessages extends Observable {
@@ -35,5 +36,20 @@ public class ChatMessages extends Observable {
 
     public void setSenderName(String senderName) {
         this.senderName = senderName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ChatMessages that = (ChatMessages) o;
+        return Objects.equals(message, that.message) &&
+                Objects.equals(receiverName, that.receiverName) &&
+                Objects.equals(senderName, that.senderName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(message, receiverName, senderName);
     }
 }
