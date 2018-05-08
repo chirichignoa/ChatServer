@@ -6,6 +6,7 @@ public class MessagesCodes {
     public static final String GLOBAL_MESSAGE = "GBL"; // GBL|sender|message
     public static final String NEW_USER = "NWU"; // NWU|username
     public static final String GET_USERS = "GTU"; // GTU
+    public static final String REMOVE_USER = "RMV"; // RMV|username
     public static final String SEPARATOR = "|";
 
 }

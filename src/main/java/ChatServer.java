@@ -50,9 +50,19 @@ public class ChatServer {
         runningThreads.put(userName, thread);
     }
 
+    public void removeUser(String userName) {
+        runningThreads.remove(userName);
+    }
+
     public void broadcastUser(String userName) {
-        for (Map.Entry<String, ChatServerThread>  entry: runningThreads.entrySet()) {
-            entry.getValue().updateUser(userName);
+        for (ChatServerThread chat: runningThreads.values()) {
+            chat.updateUser(userName);
+        }
+    }
+
+    public void broadcastRemoveUser(String userName) {
+        for (ChatServerThread chat: runningThreads.values()) {
+            chat.updateRemoveUser(userName);
         }
     }
 }
