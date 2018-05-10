@@ -99,8 +99,7 @@ public class ChatServerThread extends Thread implements Observer {
                 break;
             case MessagesCodes.GLOBAL_MESSAGE:
                 log.debug("Nuevo mensaje global");
-                this.globalMessages.setSenderName(this.userName);
-                this.globalMessages.setMessage(args[1]); //args[1] contains global message
+                this.sendGlobal(args[1]);
                 break;
             case MessagesCodes.PRIVATE_MESSAGE:
                 log.debug("Nuevo mensaje privado");
@@ -168,7 +167,6 @@ public class ChatServerThread extends Thread implements Observer {
      * @param message mensaje que se envia
      * @see ChatMessages
      */
-    // Chequear concurrencia aca
     private synchronized void sendPrivateMessage(String senderName, String receiverName, String message) {
         ChatMessages chatMessage = this.privateMessages.get(receiverName);
         if ( chatMessage == null ) {
@@ -185,6 +183,15 @@ public class ChatServerThread extends Thread implements Observer {
         chatMessage.setSenderName(senderName);
         chatMessage.setReceiverName(receiverName);
         chatMessage.setMessage(message);
+    }
+
+    /**
+     * Metodo que se ejecuta al enviar un mensaje global. Cambia el estado del objeto observable.
+     * @param message mensaje a enviar
+     */
+    private synchronized void sendGlobal(String message) {
+        this.globalMessages.setSenderName(this.userName);
+        this.globalMessages.setMessage(message); //args[1] contains global message
     }
 
     /**
